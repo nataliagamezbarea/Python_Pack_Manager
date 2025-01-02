@@ -1,0 +1,95 @@
+{
+  "name": "PythonPackManager",
+  "displayName": "Python Pack Manager",
+  "description": "Extensión para Visual Studio Code que permite crear paquetes, proyectos y archivos Python de manera fácil. Crea paquetes Python con la estructura necesaria y el archivo __init__.py, genera proyectos Python con entornos virtuales y configuraciones específicas para VSCode, y permite crear archivos Python (.py) listos para editar.",
+  "version": "1.0.0",
+  "publisher": "NataliaGB",
+  "repository": {
+    "url": "https://github.com/nataliagamezbarea/Python_Pack_Manager"
+  },
+  "icon": "icons/icon.png",
+  "engines": {
+    "vscode": "^1.52.0"
+  },
+  "activationEvents": [
+    "onCommand:createPythonPackage.createPythonPackage",
+    "onCommand:createPythonPackage.createPythonProject",
+    "onCommand:createPythonPackage.createPythonFile"
+  ],
+  "main": "src/extension.js",
+  "contributes": {
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "createPythonPackage.createPythonProject",
+          "when": "true",
+          "group": "navigation"
+        },
+        {
+          "command": "createPythonPackage.createPythonPackage",
+          "when": "true",
+          "group": "navigation"
+        },
+        {
+          "command": "createPythonPackage.createPythonFile",
+          "when": "true",
+          "group": "navigation"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "PythonPackManager-sidebar-view",
+          "title": "Python Package",
+          "icon": "icons/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "PythonPackManager-sidebar-view": [
+        {
+          "type": "webview",
+          "id": "PythonPackManager-sidebar",
+          "name": "Create Python Package",
+          "icon": "icons/icon.png",
+          "contextualTitle": "Create Python Package"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "createPythonPackage.createPythonProject",
+        "title": "📚 Crear Proyecto de Python",
+        "icon": "icons/icon.png"
+      },
+      {
+        "command": "createPythonPackage.createPythonPackage",
+        "title": "📦 Crear Package de Python",
+        "icon": "icons/icon.png"
+      },
+      {
+        "command": "createPythonPackage.createPythonFile",
+        "title": "📄 Crear Fichero Python",
+        "icon": "icons/icon.png"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "node ./test/runTest.js",
+    "postinstall": "node ./node_modules/vscode/bin/install"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.52.0",
+    "eslint": "^7.15.0",
+    "typescript": "^4.1.2",
+    "vscode": "^1.1.28",
+    "@types/node": "^10.12.21",
+    "@types/mocha": "^2.2.42"
+  },
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
+}
