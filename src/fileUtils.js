@@ -13,7 +13,7 @@ async function manejarSolicitudCrear(tipo, uri) {
   let nombre = await pedirNombre(tipo);
 
   if (!nombre) return;
-  
+
   switch (tipo) {
     case "fichero":
       await crearArchivoPython(nombre, carpetaDestino);
@@ -96,14 +96,14 @@ async function configurarProyectoPython(rutaDestino) {
 
 async function crearArchivoEnv(rutaDestino) {
   const rutaEnv = path.join(rutaDestino, ".env");
-  if (!fs.existsSync(rutaEnv)) {
+  if (!(await existeRuta(rutaEnv))) {
     await fs.promises.writeFile(rutaEnv, "# Configuración para Visual Studio\nPYTHONPATH=.\n");
   }
 }
 
 async function configurarVSCode(rutaDestino) {
   const rutaCarpetaVSCode = path.join(rutaDestino, ".vscode");
-  if (!fs.existsSync(rutaCarpetaVSCode)) {
+  if (!(await existeRuta(rutaCarpetaVSCode))) {
     await fs.promises.mkdir(rutaCarpetaVSCode, { recursive: true });
   }
 
@@ -113,13 +113,19 @@ async function configurarVSCode(rutaDestino) {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
   };
 
-  const configuracionesActuales = fs.existsSync(rutaConfiguracion)
-    ? JSON.parse(await fs.promises.readFile(rutaConfiguracion, "utf-8"))
-    : {};
-
+  const configuracionesActuales = await obtenerConfiguracionesActuales(rutaConfiguracion);
+  
   if (!configuracionesIguales(configuraciones, configuracionesActuales)) {
     await fs.promises.writeFile(rutaConfiguracion, JSON.stringify({ ...configuracionesActuales, ...configuraciones }, null, 2));
   }
+}
+
+async function obtenerConfiguracionesActuales(rutaConfiguracion) {
+  if (await existeRuta(rutaConfiguracion)) {
+    const configuracionesString = await fs.promises.readFile(rutaConfiguracion, "utf-8");
+    return JSON.parse(configuracionesString);
+  }
+  return {};
 }
 
 function configuracionesIguales(config1, config2) {
@@ -128,14 +134,42 @@ function configuracionesIguales(config1, config2) {
 
 async function crearEntornoVirtual(rutaDestino) {
   const rutaVenv = path.join(rutaDestino, ".venv");
-  if (!fs.existsSync(rutaVenv)) {
-    exec(`python -m venv ${rutaVenv}`, (error, stdout, stderr) => {
-      if (error) {
-        mostrarError(`Error al crear entorno virtual: ${stderr}`);
-        return;
+
+  if (!(await existeRuta(rutaVenv))) {
+    try {
+      await ejecutarComando(`python -m venv ${rutaVenv}`);
+
+      const rutaGitIgnore = path.join(rutaVenv, ".gitignore");
+      if (await existeRuta(rutaGitIgnore)) {
+        await fs.promises.unlink(rutaGitIgnore);
+        console.log(".gitignore eliminado correctamente.");
       }
+
       vscode.window.showInformationMessage("Entorno virtual '.venv' creado en la raíz del proyecto.");
+    } catch (error) {
+      mostrarError(`Error al crear el entorno virtual o eliminar '.gitignore': ${error.message}`);
+    }
+  }
+}
+
+function ejecutarComando(comando) {
+  return new Promise((resolve, reject) => {
+    exec(comando, (error, stdout, stderr) => {
+      if (error) {
+        reject(new Error(`Error: ${stderr}`));
+      } else {
+        resolve(stdout);
+      }
     });
+  });
+}
+
+async function existeRuta(ruta) {
+  try {
+    await fs.promises.access(ruta);
+    return true;
+  } catch {
+    return false;
   }
 }
 
