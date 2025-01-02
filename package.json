@@ -2,7 +2,7 @@
   "name": "PythonPackManager",
   "displayName": "Python Pack Manager",
   "description": "Extensión para Visual Studio Code que permite crear paquetes, proyectos y archivos Python de manera fácil. Crea paquetes Python con la estructura necesaria y el archivo __init__.py, genera proyectos Python con entornos virtuales y configuraciones específicas para VSCode, y permite crear archivos Python (.py) listos para editar.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "NataliaGB",
   "repository": {
     "url": "https://github.com/nataliagamezbarea/Python_Pack_Manager"

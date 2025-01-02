@@ -54,24 +54,41 @@ async function crearPaquetePython(nombre, carpetaDestino) {
 async function crearProyectoPython(nombre, carpetaDestino) {
   const rutaDestino = path.join(carpetaDestino, nombre);
   try {
-    await fs.promises.mkdir(rutaDestino, { recursive: true });
-    await configurarProyectoPython(rutaDestino);
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: "Creando proyecto de Python...",
+        cancellable: false
+      },
+      async (progress, token) => {
+        // Reporta el progreso al usuario
+        progress.report({ message: "Configurando entorno..." });
 
-    const respuesta = await vscode.window.showInformationMessage(
-      `Proyecto '${nombre}' creado correctamente. ¿Deseas abrirlo?`,
-      { modal: true },
-      "Abrir", "Abrir en una pestaña nueva", "No Abrir"
+        // Crear la carpeta del proyecto
+        await fs.promises.mkdir(rutaDestino, { recursive: true });
+
+        // Configurar el proyecto Python (entorno virtual, configuración de VSCode, etc.)
+        await configurarProyectoPython(rutaDestino);
+
+        // Una vez creado el proyecto, pregunta si lo desean abrir
+        const respuesta = await vscode.window.showInformationMessage(
+          `Proyecto '${nombre}' creado correctamente. ¿Deseas abrirlo?`,
+          { modal: true },
+          "Abrir", "Abrir en una pestaña nueva", "No Abrir"
+        );
+
+        if (respuesta === "Abrir") {
+          exec(`code . --reuse-window`, { cwd: rutaDestino });
+        } else if (respuesta === "Abrir en una pestaña nueva") {
+          exec(`code .`, { cwd: rutaDestino });
+        }
+      }
     );
-
-    if (respuesta === "Abrir") {
-      exec(`code . --reuse-window`, { cwd: rutaDestino });
-    } else if (respuesta === "Abrir en una pestaña nueva") {
-      exec(`code .`, { cwd: rutaDestino });
-    }
   } catch (error) {
     mostrarError(`Error al crear el proyecto Python: ${error.message}`);
   }
 }
+
 
 async function pedirNombre(tipo) {
   return await vscode.window.showInputBox({
