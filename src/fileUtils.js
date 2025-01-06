@@ -61,16 +61,14 @@ async function crearProyectoPython(nombre, carpetaDestino) {
         cancellable: false
       },
       async (progress, token) => {
-        // Reporta el progreso al usuario
         progress.report({ message: "Configurando entorno..." });
 
-        // Crear la carpeta del proyecto
         await fs.promises.mkdir(rutaDestino, { recursive: true });
 
-        // Configurar el proyecto Python (entorno virtual, configuración de VSCode, etc.)
         await configurarProyectoPython(rutaDestino);
 
-        // Una vez creado el proyecto, pregunta si lo desean abrir
+        await crearArchivoREADME(rutaDestino);
+
         const respuesta = await vscode.window.showInformationMessage(
           `Proyecto '${nombre}' creado correctamente. ¿Deseas abrirlo?`,
           { modal: true },
@@ -89,7 +87,6 @@ async function crearProyectoPython(nombre, carpetaDestino) {
   }
 }
 
-
 async function pedirNombre(tipo) {
   return await vscode.window.showInputBox({
     prompt: `Introduce el nombre del ${tipo}`,
@@ -106,16 +103,8 @@ function mostrarError(mensaje) {
 }
 
 async function configurarProyectoPython(rutaDestino) {
-  await crearArchivoEnv(rutaDestino);
   await configurarVSCode(rutaDestino);
   await crearEntornoVirtual(rutaDestino);
-}
-
-async function crearArchivoEnv(rutaDestino) {
-  const rutaEnv = path.join(rutaDestino, ".env");
-  if (!(await existeRuta(rutaEnv))) {
-    await fs.promises.writeFile(rutaEnv, "# Configuración para Visual Studio\nPYTHONPATH=.\n");
-  }
 }
 
 async function configurarVSCode(rutaDestino) {
@@ -126,8 +115,16 @@ async function configurarVSCode(rutaDestino) {
 
   const rutaConfiguracion = path.join(rutaCarpetaVSCode, "settings.json");
   const configuraciones = {
-    "python.envFile": "${workspaceFolder}/.env",
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+    "terminal.integrated.env.windows": {
+      "PYTHONPATH": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.linux": {
+      "PYTHONPATH": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.osx": {
+      "PYTHONPATH": "${workspaceFolder}"
+    }
   };
 
   const configuracionesActuales = await obtenerConfiguracionesActuales(rutaConfiguracion);
@@ -155,16 +152,9 @@ async function crearEntornoVirtual(rutaDestino) {
   if (!(await existeRuta(rutaVenv))) {
     try {
       await ejecutarComando(`python -m venv ${rutaVenv}`);
-
-      const rutaGitIgnore = path.join(rutaVenv, ".gitignore");
-      if (await existeRuta(rutaGitIgnore)) {
-        await fs.promises.unlink(rutaGitIgnore);
-        console.log(".gitignore eliminado correctamente.");
-      }
-
       vscode.window.showInformationMessage("Entorno virtual '.venv' creado en la raíz del proyecto.");
     } catch (error) {
-      mostrarError(`Error al crear el entorno virtual o eliminar '.gitignore': ${error.message}`);
+      mostrarError(`Error al crear el entorno virtual: ${error.message}`);
     }
   }
 }
@@ -187,6 +177,36 @@ async function existeRuta(ruta) {
     return true;
   } catch {
     return false;
+  }
+}
+
+async function crearArchivoREADME(rutaDestino) {
+  const rutaREADME = path.join(rutaDestino, "README.md");
+  const contenido = `# Configuración de Entorno Virtual en Python
+
+Un entorno virtual permite aislar las dependencias de tu proyecto de Python, asegurando que no interfieran con otras aplicaciones o proyectos. Aquí te explicamos cómo configurarlo.
+
+## Requisitos Previos
+
+1. Asegúrate de tener Python instalado en tu sistema. Verifica la versión ejecutando:
+    \`\`\`sh
+    python --version
+    \`\`\`
+
+## Crear un Entorno Virtual
+
+1. Navega a la ruta de tu proyecto:
+    \`\`\`sh
+    cd ruta_del_proyecto
+    \`\`\`
+
+2. Crea el entorno virtual utilizando el módulo \`venv\`:
+    \`\`\`sh
+    python -m venv .venv
+    \`\`\``;
+  
+  if (!(await existeRuta(rutaREADME))) {
+    await fs.promises.writeFile(rutaREADME, contenido);
   }
 }
 
