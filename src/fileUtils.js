@@ -68,6 +68,7 @@ async function crearProyectoPython(nombre, carpetaDestino) {
         await configurarProyectoPython(rutaDestino);
 
         await crearArchivoREADME(rutaDestino);
+        await crearGitignore(rutaDestino); // Crear el archivo .gitignore aquí
 
         const respuesta = await vscode.window.showInformationMessage(
           `Proyecto '${nombre}' creado correctamente. ¿Deseas abrirlo?`,
@@ -207,6 +208,20 @@ Un entorno virtual permite aislar las dependencias de tu proyecto de Python, ase
   
   if (!(await existeRuta(rutaREADME))) {
     await fs.promises.writeFile(rutaREADME, contenido);
+  }
+}
+
+async function crearGitignore(rutaDestino) {
+  const rutaGitignore = path.join(rutaDestino, ".gitignore");
+  const contenidoGitignore = `.venv/`;
+
+  try {
+    if (!(await existeRuta(rutaGitignore))) {
+      await fs.promises.writeFile(rutaGitignore, contenidoGitignore);
+      vscode.window.showInformationMessage("Archivo '.gitignore' creado correctamente.");
+    }
+  } catch (error) {
+    mostrarError(`Error al crear el archivo .gitignore: ${error.message}`);
   }
 }
 
