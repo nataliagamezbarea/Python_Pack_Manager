@@ -213,7 +213,8 @@ Un entorno virtual permite aislar las dependencias de tu proyecto de Python, ase
 
 async function crearGitignore(rutaDestino) {
   const rutaGitignore = path.join(rutaDestino, ".gitignore");
-  const contenidoGitignore = `.venv/`;
+  const contenidoGitignore = `.venv/
+**/__pycache__/`;
 
   try {
     if (!(await existeRuta(rutaGitignore))) {
